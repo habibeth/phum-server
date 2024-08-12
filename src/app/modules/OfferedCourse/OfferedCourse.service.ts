@@ -8,6 +8,8 @@ import { AcademicDepartment } from "../academicDepartment/academicDepartment.mod
 import { Course } from "../course/course.model";
 import { Faculty } from "../faculty/faculty.model";
 import { hasTimeConflict } from "./OfferedCourse.utils";
+import QueryBuilder from "../../builder/QueryBuilder";
+import { Student } from "../student/student.model";
 
 
 
@@ -90,7 +92,37 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
     return result;
 };
 const getAllOfferedCourseFromDB = async (query: Record<string, unknown>) => {
+    const offeredCourseQuery = new QueryBuilder(
+        OfferedCourse.find()
+            .populate('semesterRegistration')
+            .populate('academicSemester')
+            .populate('academicFaculty')
+            .populate('academicDepartment')
+            .populate('course')
+            .populate('faculty')
+        , query)
+        .filter()
+        .sort()
+        .paginate()
+        .fields()
 
+    const result = await offeredCourseQuery.modelQuery;
+    const meta = await offeredCourseQuery.countTotal();
+
+    return {
+        meta,
+        result
+    }
+};
+
+const getMyOfferedCourseFromDB = async (userId: string) => {
+    const student = await Student.findOne({ id: userId })
+    if (!student) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not Found!')
+    }
+
+    const currentOngoingSemester = SemesterRegistration.findOne({ status: 'ONGOING' })
+    return currentOngoingSemester
 };
 
 const getSingleOfferedCourseFromDB = async (id: string) => {
@@ -159,5 +191,6 @@ export const OfferedCourseServices = {
     getAllOfferedCourseFromDB,
     getSingleOfferedCourseFromDB,
     updateOfferedCourseIntoDB,
-    deleteOfferedCourseFromDB
+    deleteOfferedCourseFromDB,
+    getMyOfferedCourseFromDB
 };
