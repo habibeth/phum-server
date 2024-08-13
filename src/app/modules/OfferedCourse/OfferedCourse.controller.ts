@@ -36,7 +36,7 @@ const getAllOfferedCourse = catchAsync(async (req, res) => {
 const getMyOfferedCourse = catchAsync(async (req, res) => {
     const userId = req.user.userId;
     // console.log(req.user.userId)
-    const result = await OfferedCourseServices.getMyOfferedCourseFromDB(userId);
+    const result = await OfferedCourseServices.getMyOfferedCourseFromDB(userId, req.query);
 
     sendResponse(res, {
         message: 'My Offered Course are retrieved successfully',

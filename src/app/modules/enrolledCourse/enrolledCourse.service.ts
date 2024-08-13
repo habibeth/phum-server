@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { SemesterRegistration } from "../semesterRegisteration/semesterRegistration.model";
 import { Course } from "../course/course.model";
 import { Faculty } from "../faculty/faculty.model";
+import { calculateGradeAndPoints } from "./enrolledCourse.utils";
 
 const createEnrolledCourseIntoDB = async (
     userId: string,
@@ -178,6 +179,25 @@ const updateEnrolledCourseIntoDB = async (facultyId: string, payload: Partial<TE
     const modifiedData: Record<string, unknown> = {
         ...courseMarks
     }
+
+
+    if (courseMarks?.finalTerm) {
+        const { classTest1, classTest2, midTerm, finalTerm } =
+            isCourseBelongFaculty.courseMarks;
+
+        const totalMarks =
+            Math.ceil(classTest1) +
+            Math.ceil(midTerm) +
+            Math.ceil(classTest2) +
+            Math.ceil(finalTerm);
+
+        const result = calculateGradeAndPoints(totalMarks);
+
+        modifiedData.grade = result.grade;
+        modifiedData.gradePoints = result.gradePoints;
+        modifiedData.isCompleted = true;
+    }
+
 
 
     if (courseMarks && Object.keys(courseMarks).length) {
